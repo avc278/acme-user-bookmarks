@@ -1,19 +1,61 @@
 <html>
-  <head>
-<style>
+    <head>
+        <style>
 
-</style>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js'></script>
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
-    <script src='https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/5.0.0/react-router-dom.js'></script>
-  </head>
-  <body>
-    <div id='root'></div>
-    <script type='text/babel'>
-      const root = document.querySelector('#root');
-      ReactDOM.render(<hr />, root);
-    </script>
-  </body>
+        </style>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js'></script>
+        <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+        <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/react-router-dom/5.0.0/react-router-dom.js'></script>
+    </head>
+    <body>
+        <div id='root'></div>
+        <script type='text/babel'>
+            const { render } = ReactDOM;
+            const { Component } = React;
+
+            const API = 'https://acme-users-api-rev.herokuapp.com/api'
+            const bookmarksEndpoint = `/users/:id/bookmarks`
+            const fetchUser = async ()=> {
+                const storage = window.localStorage;
+                const userId = storage.getItem('userId'); 
+                if(userId){
+                try {
+                    return (await axios.get(`${API}/users/detail/${userId}`)).data;
+                }
+                catch(ex){
+                    storage.removeItem('userId');
+                    return fetchUser();
+                }
+                }
+                const user = (await axios.get(`${API}/users/random`)).data;
+                storage.setItem('userId', user.id);
+                return user;
+            };
+
+            class App extends Component {
+                constructor() {
+                    super();
+                    this.state = {
+                        user: {},
+                    };
+                }
+
+                async componentDidMount() {
+                    const user = await fetchUser();
+                    console.log(user);
+                    this.setState({ user })
+                }
+
+                render() {
+                    const { user } = this.state;
+                    return (<div>Hello {user.fullName} </div>)
+                }
+            }
+
+            const root = document.querySelector('#root');
+            ReactDOM.render(<App />, root);
+        </script>
+    </body>
 </html>
